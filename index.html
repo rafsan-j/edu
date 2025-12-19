@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Class Portal</title>
+    <title>Classroom Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@instantdb/core@0.17.0/dist/index.global.js" onload="initApp()" onerror="scriptError()"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/@instantdb/core@0.17.0/dist/index.global.js"></script>
     <style>
         .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; background: #000; border-radius: 12px; }
         .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-        .tab-active { background-color: #2563eb !important; color: white !important; font-weight: bold; }
+        .tab-active { background-color: #2563eb !important; color: white !important; font-weight: bold; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
         .drive-placeholder { background: #fff7ed; border: 2px dashed #f97316; border-radius: 12px; padding: 20px; text-align: center; }
     </style>
 </head>
@@ -18,27 +17,37 @@
 
 <div id="root" class="max-w-2xl mx-auto p-4">
     <div id="loading-spinner" class="text-center mt-20">
-        <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-t-transparent mb-4"></div>
-        <p id="status-text" class="text-gray-400 text-lg">Connecting to Classroom...</p>
+        <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-blue-600 border-t-transparent mb-4"></div>
+        <p id="status-msg" class="text-gray-500 font-medium">Connecting to Classroom...</p>
+        <div id="troubleshoot" class="hidden mt-6 p-4 bg-red-50 text-red-700 rounded-xl text-sm border border-red-100">
+            <p class="font-bold">Still connecting?</p>
+            <p>1. Go to InstantDB Dashboard > Auth.</p>
+            <p>2. Add your GitHub URL to <b>Authorized Origins</b>.</p>
+            <p>3. Hard Refresh (Ctrl + F5).</p>
+        </div>
     </div>
 
-    <div id="auth-section" class="hidden mt-10 bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
-        <h2 class="text-2xl font-bold text-center text-gray-800 mb-8">Authorized Student Access</h2>
-        <input type="email" id="email" placeholder="student@example.com" class="w-full p-4 border rounded-2xl mb-4 outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
-        <button onclick="sendMagicLink()" id="send-btn" class="w-full bg-blue-600 text-white p-4 rounded-2xl font-bold shadow-lg active:scale-95 transition-all">Get Login Code</button>
+    <div id="auth-section" class="hidden mt-10 bg-white p-8 rounded-3xl shadow-2xl border border-gray-100">
+        <h2 class="text-2xl font-black text-center text-gray-800 mb-2">Class Access</h2>
+        <p class="text-center text-gray-500 text-sm mb-8">Enter your email for the magic code.</p>
+        <div id="login-form-container">
+            <input type="email" id="email" placeholder="student@example.com" class="w-full p-4 border rounded-2xl mb-4 outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
+            <button onclick="sendMagicLink()" id="send-btn" class="w-full bg-blue-600 text-white p-4 rounded-2xl font-bold shadow-lg active:scale-95 transition-all">Get Code</button>
+        </div>
     </div>
 
     <div id="main-content" class="hidden">
         <header class="flex justify-between items-center mb-6">
-            <h1 class="text-xl font-black text-slate-800 tracking-tight">CLASS PORTAL</h1>
+            <h1 class="text-xl font-black text-blue-600 tracking-tighter">STUDENT PORTAL</h1>
             <button onclick="logout()" class="text-xs font-bold text-red-500 bg-red-50 px-4 py-2 rounded-full border border-red-100">Logout</button>
         </header>
 
-        <div class="flex gap-2 mb-8 sticky top-4 z-20 bg-slate-50/90 backdrop-blur-sm py-2">
+        <div class="flex gap-2 mb-8 sticky top-4 z-20 bg-slate-50/90 backdrop-blur-md py-2">
             <button onclick="renderLinks('physics')" id="tab-physics" class="flex-1 py-3 rounded-2xl text-sm bg-white shadow-sm border border-gray-200">Physics</button>
             <button onclick="renderLinks('chemistry')" id="tab-chemistry" class="flex-1 py-3 rounded-2xl text-sm bg-white shadow-sm border border-gray-200">Chemistry</button>
             <button onclick="renderLinks('math')" id="tab-math" class="flex-1 py-3 rounded-2xl text-sm bg-white shadow-sm border border-gray-200">Math</button>
         </div>
+
         <div id="video-list" class="space-y-10 pb-24"></div>
     </div>
 </div>
@@ -47,38 +56,7 @@
     const APP_ID = 'f84763eb-f4b6-423f-bbcd-7db1b195d443';
     let db;
 
-    // This function triggers automatically when the script finishes loading
-    function initApp() {
-        try {
-            db = window.InstantDB.init({ appId: APP_ID });
-            document.getElementById('status-text').innerText = "Authenticating...";
-            
-            db.subscribeQuery({ _users: {} }, (result) => {
-                document.getElementById('loading-spinner').classList.add('hidden');
-                if (result.user) {
-                    document.getElementById('auth-section').classList.add('hidden');
-                    document.getElementById('main-content').classList.remove('hidden');
-                    renderLinks('physics');
-                } else {
-                    document.getElementById('auth-section').classList.remove('hidden');
-                    document.getElementById('main-content').classList.add('hidden');
-                }
-            });
-        } catch (e) {
-            scriptError();
-        }
-    }
-
-    function scriptError() {
-        document.getElementById('loading-spinner').innerHTML = `
-            <div class="p-6 bg-red-50 text-red-600 rounded-2xl border border-red-100">
-                <p class="font-bold">Connection Failed</p>
-                <p class="text-sm mt-2">GitHub/Browser is blocking the database script.</p>
-                <button onclick="location.reload()" class="mt-4 bg-red-600 text-white px-6 py-2 rounded-xl text-sm">Retry Connection</button>
-            </div>`;
-    }
-
-    // --- YOUR DATA ---
+    // --- DATA INTEGRATION (Full set) ---
     const portalData = {
     physics: [
         { chapter: "Vector", videos: [
@@ -203,35 +181,65 @@
     ]
 };
 
+    // --- CONNECTION START ---
+    window.onload = function() {
+        // Troubleshoot timer: If no connection after 5 seconds, show help
+        setTimeout(() => {
+            if (!document.getElementById('loading-spinner').classList.contains('hidden')) {
+                document.getElementById('troubleshoot').classList.remove('hidden');
+                document.getElementById('status-msg').innerText = "Connection taking too long...";
+            }
+        }, 5000);
+
+        if (typeof InstantDB !== 'undefined') {
+            db = InstantDB.init({ appId: APP_ID });
+            db.subscribeQuery({ _users: {} }, (result) => {
+                document.getElementById('loading-spinner').classList.add('hidden');
+                if (result.user) {
+                    document.getElementById('auth-section').classList.add('hidden');
+                    document.getElementById('main-content').classList.remove('hidden');
+                    renderLinks('physics');
+                } else {
+                    document.getElementById('auth-section').classList.remove('hidden');
+                    document.getElementById('main-content').classList.add('hidden');
+                }
+            });
+        }
+    };
+
     async function sendMagicLink() {
         const email = document.getElementById('email').value;
-        if (!email) return alert("ইমেইল দিন");
+        if (!email) return alert("Email দিন");
         try {
             await db.auth.sendMagicCode({ email });
-            const code = prompt("Enter 6-digit code from email:");
+            const code = prompt("আপনার ইমেইলে পাঠানো ৬ সংখ্যার কোডটি দিন:");
             if (code) await db.auth.signInWithMagicCode({ email, code });
-        } catch (err) { alert(err.message); }
+        } catch (err) { alert("Error: " + err.message); }
     }
 
     function logout() { db.auth.signOut(); }
 
     function renderLinks(subject) {
         ['physics', 'chemistry', 'math'].forEach(s => {
-            document.getElementById(`tab-${s}`).className = `flex-1 py-3 rounded-2xl text-sm bg-white shadow-sm border ${s === subject ? 'tab-active' : 'text-gray-500'}`;
+            const btn = document.getElementById(`tab-${s}`);
+            if(btn) btn.className = `flex-1 py-3 rounded-2xl text-sm bg-white shadow-sm border ${s === subject ? 'tab-active' : 'text-gray-500'}`;
         });
+
         const list = document.getElementById('video-list');
         list.innerHTML = "";
+        
         if(!portalData[subject] || portalData[subject].length === 0) {
-            list.innerHTML = "<p class='text-center text-gray-400 mt-10 text-sm'>No videos uploaded yet for this subject.</p>";
+            list.innerHTML = "<p class='text-center text-gray-400 mt-10'>ভিডিও শীঘ্রই আসছে...</p>";
             return;
         }
+
         portalData[subject].forEach(ch => {
-            let section = `<div><h2 class="text-sm font-bold text-blue-600 mb-6 uppercase tracking-widest pl-2 border-l-4 border-blue-600">${ch.chapter}</h2>`;
+            let section = `<div><h2 class="text-xs font-black text-blue-500 mb-6 uppercase tracking-widest pl-2 border-l-4 border-blue-600">${ch.chapter}</h2>`;
             ch.videos.forEach(vid => {
-                const videoHtml = vid.isDrive 
-                    ? `<div class="drive-placeholder"><p class="text-xs text-orange-600 font-bold mb-3">Google Drive File</p><a href="${vid.url}" target="_blank" class="bg-orange-500 text-white px-6 py-2 rounded-xl text-xs font-bold shadow-md inline-block">Preview Link</a></div>`
+                const videoUI = vid.isDrive 
+                    ? `<div class="drive-placeholder"><p class="text-xs text-orange-600 font-bold mb-3">Google Drive File</p><a href="${vid.url}" target="_blank" class="bg-orange-500 text-white px-6 py-2 rounded-xl text-xs font-bold shadow-lg inline-block">প্লে করতে এখানে ক্লিক করুন</a></div>`
                     : `<div class="video-container shadow-xl"><iframe src="${vid.url}" frameborder="0" allowfullscreen loading="lazy"></iframe></div>`;
-                section += `<div class="mb-10"><p class="text-[11px] font-bold text-gray-400 mb-3 uppercase px-2">${vid.title}</p>${videoHtml}</div>`;
+                section += `<div class="mb-10"><p class="text-[11px] font-bold text-gray-400 mb-2 uppercase px-1">${vid.title}</p>${videoUI}</div>`;
             });
             list.innerHTML += section + `</div>`;
         });
