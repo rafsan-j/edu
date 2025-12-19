@@ -3,248 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Classroom Portal</title>
+    <title>Archive 2025</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@instantdb/core@0.17.0/dist/index.global.js"></script>
     <style>
-        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; background: #000; border-radius: 12px; }
-        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-        .tab-active { background-color: #2563eb !important; color: white !important; font-weight: bold; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
-        .drive-placeholder { background: #fff7ed; border: 2px dashed #f97316; border-radius: 12px; padding: 20px; text-align: center; }
+        /* Monochromatic Custom Colors */
+        body { background-color: #0a0a0a; color: #ededed; -webkit-user-select: none; user-select: none; }
+        
+        /* Glassmorphism & Minimal Borders */
+        .glass-card { background: #121212; border: 1px solid #262626; border-radius: 20px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .glass-card:hover { border-color: #404040; }
+        
+        /* Video Container */
+        .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; background: #000; }
+        .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; filter: grayscale(0.2); }
+        
+        /* Custom Tab Styling */
+        .tab-active { background-color: #ededed !important; color: #0a0a0a !important; font-weight: 700; }
+        
+        /* Accordion Logic */
+        .accordion-content { display: none; padding: 0 20px 20px 20px; animation: fadeIn 0.4s ease; }
+        .active .accordion-content { display: block; }
+        .active { border-color: #525252; background: #171717; }
+        .active .chevron { transform: rotate(180deg); color: #ededed; }
+        .chevron { transition: transform 0.3s; color: #525252; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Hide Scrollbar */
+        ::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen font-sans">
+<body class="font-sans antialiased">
 
-<div id="root" class="max-w-2xl mx-auto p-4">
-    <div id="loading-spinner" class="text-center mt-20">
-        <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-blue-600 border-t-transparent mb-4"></div>
-        <p id="status-msg" class="text-gray-500 font-medium">Connecting to Classroom...</p>
-        <div id="troubleshoot" class="hidden mt-6 p-4 bg-red-50 text-red-700 rounded-xl text-sm border border-red-100">
-            <p class="font-bold">Still connecting?</p>
-            <p>1. Go to InstantDB Dashboard > Auth.</p>
-            <p>2. Add your GitHub URL to <b>Authorized Origins</b>.</p>
-            <p>3. Hard Refresh (Ctrl + F5).</p>
-        </div>
+<div id="root" class="max-w-xl mx-auto p-6">
+    
+    <div id="login-section" class="mt-32 glass-card p-10 text-center">
+        <h2 class="text-xs font-bold tracking-[0.4em] uppercase text-neutral-500 mb-8">Secure Access</h2>
+        <input type="password" id="pass-input" placeholder="PASSWORD" 
+            class="w-full bg-transparent border-b border-neutral-800 p-3 outline-none text-center text-xl tracking-[0.3em] mb-10 focus:border-neutral-400 transition-colors">
+        <button onclick="checkPassword()" 
+            class="w-full bg-white text-black py-4 rounded-full font-black text-xs tracking-widest hover:bg-neutral-200 transition-all uppercase">
+            Unlock
+        </button>
+        <p id="error-msg" class="text-neutral-600 text-[10px] mt-6 hidden font-bold tracking-widest uppercase">Invalid Key</p>
     </div>
 
-    <div id="auth-section" class="hidden mt-10 bg-white p-8 rounded-3xl shadow-2xl border border-gray-100">
-        <h2 class="text-2xl font-black text-center text-gray-800 mb-2">Class Access</h2>
-        <p class="text-center text-gray-500 text-sm mb-8">Enter your email for the magic code.</p>
-        <div id="login-form-container">
-            <input type="email" id="email" placeholder="student@example.com" class="w-full p-4 border rounded-2xl mb-4 outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50">
-            <button onclick="sendMagicLink()" id="send-btn" class="w-full bg-blue-600 text-white p-4 rounded-2xl font-bold shadow-lg active:scale-95 transition-all">Get Code</button>
-        </div>
-    </div>
-
-    <div id="main-content" class="hidden">
-        <header class="flex justify-between items-center mb-6">
-            <h1 class="text-xl font-black text-blue-600 tracking-tighter">STUDENT PORTAL</h1>
-            <button onclick="logout()" class="text-xs font-bold text-red-500 bg-red-50 px-4 py-2 rounded-full border border-red-100">Logout</button>
+    <div id="main-content" class="hidden pb-20">
+        <header class="flex justify-between items-end mb-12">
+            <div>
+                <h1 class="text-2xl font-light tracking-tighter">ARCHIVE <span class="font-bold">25</span></h1>
+                <p class="text-[9px] font-bold text-neutral-500 tracking-[0.3em] uppercase">Monochromatic Edition</p>
+            </div>
+            <button onclick="location.reload()" class="text-[9px] font-bold text-neutral-500 border border-neutral-800 px-4 py-2 rounded-full hover:bg-neutral-900 transition-all uppercase tracking-widest">Exit</button>
         </header>
 
-        <div class="flex gap-2 mb-8 sticky top-4 z-20 bg-slate-50/90 backdrop-blur-md py-2">
-            <button onclick="renderLinks('physics')" id="tab-physics" class="flex-1 py-3 rounded-2xl text-sm bg-white shadow-sm border border-gray-200">Physics</button>
-            <button onclick="renderLinks('chemistry')" id="tab-chemistry" class="flex-1 py-3 rounded-2xl text-sm bg-white shadow-sm border border-gray-200">Chemistry</button>
-            <button onclick="renderLinks('math')" id="tab-math" class="flex-1 py-3 rounded-2xl text-sm bg-white shadow-sm border border-gray-200">Math</button>
-        </div>
+        <nav class="flex gap-4 mb-12 sticky top-6 z-20">
+            <button onclick="render('physics')" id="btn-physics" class="flex-1 py-3 text-[10px] font-bold border border-neutral-800 rounded-full transition-all tracking-widest uppercase bg-black/50 backdrop-blur-md">Physics</button>
+            <button onclick="render('chemistry')" id="btn-chemistry" class="flex-1 py-3 text-[10px] font-bold border border-neutral-800 rounded-full transition-all tracking-widest uppercase bg-black/50 backdrop-blur-md">Chemistry</button>
+            <button onclick="render('math')" id="btn-math" class="flex-1 py-3 text-[10px] font-bold border border-neutral-800 rounded-full transition-all tracking-widest uppercase bg-black/50 backdrop-blur-md">Math</button>
+        </nav>
 
-        <div id="video-list" class="space-y-10 pb-24"></div>
+        <div id="content-list" class="space-y-4"></div>
     </div>
 </div>
 
 <script>
-    const APP_ID = 'f84763eb-f4b6-423f-bbcd-7db1b195d443';
-    let db;
+    const SECRET_B64 = "Y2xhc3MyMDI1"; // password: class2025
 
-    // --- DATA INTEGRATION (Full set) ---
-    const portalData = {
-    physics: [
-        { chapter: "Vector", videos: [
-            { title: "1.1: ভেক্টরের লব্ধি, উপাংশে বিভাজন, আপেক্ষিক বেগ", url: "https://www.youtube.com/embed/XBjyCLXlQT8" },
-            { title: "1.2: নদী-নৌকা, ডট ও ক্রস গুণন, ক্যালকুলাস", url: "https://drive.google.com/file/d/1tJxWoJYFUe7xlhK9iXVRtQGCOlkdPeCN/preview", isDrive: true }
-        ]},
-        { chapter: "Newtonian Mechanics", videos: [
-            { title: "2.1: নিউটনের সূত্র, ঘর্ষণ, লিফট, যুক্ত বস্তু", url: "https://www.youtube.com/embed/je80VO20BGE" },
-            { title: "2.2: বলের ঘাত, রকেটের গতি, ভরকেন্দ্র, কৌণিক গতিসূত্র", url: "https://www.youtube.com/embed/FF0BGMlsfrw" },
-            { title: "3.1: জড়তার ভ্রামক, টর্ক, কৌণিক ভরবেগ ও শক্তি", url: "https://www.youtube.com/embed/s27iWN1CcbY" },
-            { title: "3.2: কেন্দ্রমুখী ত্বরণ, ব্যাংকিং, উল্লম্ব বৃত্তাকার গতি", url: "https://www.youtube.com/embed/FEdbB8XLfWM" }
-        ]},
-        { chapter: "Work, Power, Energy", videos: [
-            { title: "4.1: কাজের রাশিমালা, Spring, ভারকেন্দ্রের সরণ", url: "https://www.youtube.com/embed/UY7fZQ2PU88" },
-            { title: "4.2: বিভব ও গতিশক্তি, কর্মদক্ষতা, চৌবাচ্চা", url: "https://www.youtube.com/embed/biYbbiFs1j4" }
-        ]},
-        { chapter: "Gravity and Gravitation", videos: [
-            { title: "5.1: নিউটনের মহাকর্ষ সূত্র, g এর পরিবর্তন", url: "https://www.youtube.com/embed/i0qlLlS6UAU" },
-            { title: "5.2: মুক্তিবেগ, কৃত্রিম উপগ্রহ, কেপলারের সূত্র", url: "https://www.youtube.com/embed/y_4UQxvel_A" }
-        ]},
-        { chapter: "Matter & Periodic Motion", videos: [
-            { title: "6.1: পদার্থের গাঠনিক ধর্ম, ইয়ং এর গুণাঙ্ক, পীড়ন-বিকৃতি", url: "https://www.youtube.com/embed/TRFbyh70Yko" },
-            { title: "6.2: পর্যাব্যবৃত্ত গতি, সরল দোলক, দোলন শক্তি", url: "https://www.youtube.com/embed/iZZoj9QIuW8" }
-        ]},
-        { chapter: "Ideal Gas & Thermodynamics", videos: [
-            { title: "7.1: বয়েল ও চার্লসের সূত্র, আদর্শ গ্যাস", url: "https://www.youtube.com/embed/MoYvV-YViUI" },
-            { title: "7.2: গ্যাসের গতিতত্ত্ব, আর্দ্রতা, থার্মোমিটার", url: "https://www.youtube.com/embed/UiwrpMVbOCA" },
-            { title: "8.1: তাপগতিবিদ্যার ১ম সূত্র, সমোষ্ণ ও রুদ্ধতাপীয়", url: "https://www.youtube.com/embed/Q5fPJ9kmA2k" },
-            { title: "8.2: তাপ ইঞ্জিন, কার্নোর ইঞ্জিন, এন্ট্রপি", url: "https://www.youtube.com/embed/mLrrO3EP82Y" }
-        ]},
-        { chapter: "Electricity", videos: [
-            { title: "9.1: স্থির তড়িৎ: কুলম্বের সূত্র, গাউসের সূত্র", url: "https://www.youtube.com/embed/8irH-f-yY2E" },
-            { title: "9.2: বিভব, ধারক ও ধারকত্ব, তড়িৎ দ্বিমেরু", url: "https://www.youtube.com/embed/XDE-pG7cv78" },
-            { title: "10.1: চল তড়িৎ: ও’মের সূত্র, রোধ, বিভব বিভাজক", url: "https://www.youtube.com/embed/ierwn_OmqV4" },
-            { title: "10.2: কার্শফের সূত্র, শান্ট, কোষের সমবায়", url: "https://www.youtube.com/embed/pfPW6o3Skxg" }
-        ]},
-        { chapter: "Modern & Nuclear Physics", videos: [
-            { title: "11.1: ভৌত আলোকবিজ্ঞান: ব্যতিচার, অপবর্তন, সমবর্তন", url: "https://www.youtube.com/embed/ZfQeo3OYjr0" },
-            { title: "11.2: লরেঞ্জ রূপান্তর, ফটো তড়িৎ ক্রিয়া, এক্স-রে", url: "https://www.youtube.com/embed/3Fasaq-dgjs" },
-            { title: "12.1: পরমাণু মডেল, তেজস্ক্রিয়তা, ফিউশন-ফিশন", url: "https://www.youtube.com/embed/wtT-sb63z2U" },
-            { title: "12.2: সেমিকন্ডাক্টর, ডায়োড, ট্রানজিস্টর", url: "https://www.youtube.com/embed/LbdXOcYWwec" }
-        ] }
-    ],
-    math: [
-        { chapter: "Straight Line", videos: [
-            { title: "1.1: স্থানাঙ্ক ব্যবস্থা ও সরলরেখার সমীকরণ", url: "https://www.youtube.com/embed/n9ucqXgveqo" },
-            { title: "1.2: সমীকরণ (সকল সমস্যা) ও প্রতিবিম্ব", url: "https://www.youtube.com/embed/A0VyLG1U_mE" }
-        ]},
-        { chapter: "Circle", videos: [
-            { title: "2.1: বৃত্তের সমীকরণ ও পোলার সমীকরণ", url: "https://www.youtube.com/embed/-cUAIwk-QnA" },
-            { title: "2.2: সঞ্চারপথ, স্পর্শক-ছেদক ও সাধারণ স্পর্শক", url: "https://www.youtube.com/embed/tOKou6HaRMU" }
-        ]},
-        { chapter: "Conics", videos: [
-            { title: "3.1: কনিক শনাক্তকরণ ও পরাবৃত্ত", url: "https://www.youtube.com/embed/D5eS79LOEVk" },
-            { title: "3.2: কনিক শনাক্ত ও পরাবৃত্ত (পার্ট ২)", url: "https://www.youtube.com/embed/mE14yHjiK7Y" },
-            { title: "4.1: অধিবৃত্ত ও সকল কনিকের স্পর্শক", url: "https://www.youtube.com/embed/JBBKyH3Y7dA" }
-        ]},
-        { chapter: "Matrix & Complex Number", videos: [
-            { title: "4.2: ম্যাট্রিক্স ও নির্ণায়ক", url: "https://www.youtube.com/embed/qxkvSrWEEqA" },
-            { title: "5.1: জটিল সংখ্যা: মডুলাস, আর্গুমেন্ট, পোলার প্রতিরূপ", url: "https://www.youtube.com/embed/9Z9_4M1o2nY" },
-            { title: "5.2: জটিল সংখ্যা: মূল, সঞ্চারপথ, উৎপাদক", url: "https://www.youtube.com/embed/I08ju-tkcp4" }
-        ]},
-        { chapter: "Polynomial & Trigonometry", videos: [
-            { title: "6.1: বহুপদী সমীকরণ ও লেখচিত্র", url: "https://www.youtube.com/embed/lrQbaOLOLmg" },
-            { title: "6.2: মূল সহগ সম্পর্ক, সাধারণ মূল", url: "https://www.youtube.com/embed/y976Gk_aDC0" },
-            { title: "7.1: সংযুক্ত কোণ, Euler & De Moivre সূত্র", url: "https://www.youtube.com/embed/RRSwAF8GbU4" },
-            { title: "7.2: যৌগিক, গুণিতক কোণ ও ত্রিভুজের গুণাবলি", url: "https://www.youtube.com/embed/ua7dtG2CQaQ" }
-        ]},
-        { chapter: "Inverse Trig & Calculus", videos: [
-            { title: "8.1: বিপরীত ত্রিকোণমিতি: লেখচিত্র ও ডোমেন রেঞ্জ", url: "https://www.youtube.com/embed/VqxSG8hqvXE" },
-            { title: "8.2: ত্রিকোণমিতিক সমীকরণ সমাধান", url: "https://www.youtube.com/embed/5JPt7dC6ccw" },
-            { title: "9.1: অন্তরীকরণ: সীমা, L'Hopital Rule", url: "https://www.youtube.com/embed/leLz-2MQw7M" },
-            { title: "9.2: Sandwich & Mean Value Theorem", url: "https://www.youtube.com/embed/7Gp8zAc8Las" },
-            { title: "11.1: পর্যায়ক্রমিক অন্তরীকরণ, লঘুমান-গুরুমান", url: "https://www.youtube.com/embed/lY5ufNC_gcc" }
-        ]},
-        { chapter: "Integration & Statics", videos: [
-            { title: "10.1: অনির্দিষ্ট যোগজীকরণ", url: "https://www.youtube.com/embed/3nen9_l--0A" },
-            { title: "10.2: অংশক্রমে সমাকলন ও নির্দিষ্ট যোগজ", url: "https://www.youtube.com/embed/FLszdGtfqQQ" },
-            { title: "11.2: যোগজীকরণের সাহায্যে ক্ষেত্রফল", url: "https://www.youtube.com/embed/mldJKQ_i6L8" },
-            { title: "12.1: স্থিতিবিদ্যা: লব্ধি ও লামির উপপাদ্য", url: "https://www.youtube.com/embed/cG8nFtMWCIw" },
-            { title: "12.2: স্থিতিবিদ্যা: ভ্রামক ও সমান্তরাল বল", url: "https://www.youtube.com/embed/FCBlXjSyEg0" }
-        ]},
-        { chapter: "Dynamics", videos: [
-            { title: "13.1: বস্তুকণার গতি: বেগের সামান্তরিক সূত্র", url: "https://www.youtube.com/embed/hPrvTST5G6E" },
-            { title: "13.2: পড়ন্ত বস্তু ও প্রাস সংক্রান্ত", url: "https://www.youtube.com/embed/TImKGgx0TRU" }
-        ]}
-    ],
-    chemistry: [
-        { chapter: "Quantitative & Qualitative", videos: [
-            { title: "1.1: মোল, ঘনমাত্রা ও সহগানুপাত সূত্র", url: "https://www.youtube.com/embed/4faQxwkfZ7M" },
-            { title: "1.2: জারণ-বিজারণ, অম্ল-ক্ষার টাইট্রেশন", url: "https://www.youtube.com/embed/IFuUwzJt2pU" },
-            { title: "3.1: পরমাণু মডেল, কোয়ান্টাম সংখ্যা, বর্ণালি", url: "https://www.youtube.com/embed/XXavQ_jK8zU" },
-            { title: "3.2: দ্রাব্যতা ও আয়ন শনাক্তকরণ", url: "https://www.youtube.com/embed/uFS7KbDiMTk" }
-        ]},
-        { chapter: "Chemical Change & Environment", videos: [
-            { title: "2.1.1: রাসায়নিক পরিবর্তন (লেকচার ১)", url: "https://www.youtube.com/embed/H5JtgOYUCJk" },
-            { title: "2.1.2: KP, KC ও সাম্যাবস্থা", url: "https://www.youtube.com/embed/GzJLSstpyyk" },
-            { title: "2.2: অম্ল-ক্ষার সাম্যাবস্থা ও এসিড ক্ষার তত্ত্ব", url: "https://www.youtube.com/embed/RY7BNfh7JVA" },
-            { title: "6.1: গ্যাস সূত্রসমূহ, আদর্শ ও বাস্তব গ্যাস", url: "https://www.youtube.com/embed/0FPQN-hYnkY" },
-            { title: "6.2: ডাল্টনের চাপ সূত্র ও পানির বিশুদ্ধতা", url: "https://www.youtube.com/embed/vvtoId5pK1g" }
-        ]},
-        { chapter: "Periodic Properties & Bonding", videos: [
-            { title: "4.1: পর্যায় সারণি ও পর্যায়বৃত্ত ধর্ম", url: "https://www.youtube.com/embed/vOAszN7evLg" },
-            { title: "4.2: d-ব্লক মৌল ও জটিল যৌগের সংকরায়ন", url: "https://www.youtube.com/embed/uDBYfoXvyMA" },
-            { title: "5.1: আয়নিক, সমযোজী বন্ধন ও হাইব্রিডাইজেশন", url: "https://www.youtube.com/embed/MzDpM4h_6qw" },
-            { title: "5.2: পোলারিটি, হাইড্রোজেন ও ভ্যান্ডার ওয়ালস বন্ধন", url: "https://www.youtube.com/embed/csMRbxOiB1Q" }
-        ]},
-        { chapter: "Electrochemistry & Industrial", videos: [
-            { title: "7.1: পরিবাহিতা ও ফ্যারাডের সূত্র", url: "https://www.youtube.com/embed/WMccmFpn6Lo" },
-            { title: "7.2: নার্নস্টের সমীকরণ ও কর্মমুখী রসায়ন", url: "https://www.youtube.com/embed/4GowBH2XFH4" }
-        ]},
-        { chapter: "Organic Chemistry", videos: [
-            { title: "8.1: জৈব যৌগের নামকরণ ও সমগোত্রীয় শ্রেণি", url: "https://www.youtube.com/embed/tRUUNDAcIG8" },
-            { title: "8.2: স্টেরিও সমাণুতা", url: "https://www.youtube.com/embed/WSJ2GpA5h_E" },
-            { title: "9.1: অ্যালকেন, অ্যালকিন, অ্যালকাইন", url: "https://www.youtube.com/embed/4QNNRv2pCw8" },
-            { title: "9.2: অ্যারোমেটিসিটি, হাকেল তত্ত্ব ও টলুইন", url: "https://www.youtube.com/embed/0k5L3CgUovU" },
-            { title: "10.1: অ্যালকাইল ও অ্যারাইল হ্যালাইড", url: "https://www.youtube.com/embed/KGGUA_Bo_og" },
-            { title: "10.2: অ্যালকোহল ও ইথার", url: "https://www.youtube.com/embed/9ceftxdLqCg" },
-            { title: "11.1: অ্যালডিহাইড ও কিটোন", url: "https://www.youtube.com/embed/N_aLnpkTahY" },
-            { title: "11.2: জৈব এসিড ও অ্যামিন", url: "https://www.youtube.com/embed/aCYLxjm2bJU" }
-        ]}
-    ]
-};
-
-    // --- CONNECTION START ---
-    window.onload = function() {
-        // Troubleshoot timer: If no connection after 5 seconds, show help
-        setTimeout(() => {
-            if (!document.getElementById('loading-spinner').classList.contains('hidden')) {
-                document.getElementById('troubleshoot').classList.remove('hidden');
-                document.getElementById('status-msg').innerText = "Connection taking too long...";
-            }
-        }, 5000);
-
-        if (typeof InstantDB !== 'undefined') {
-            db = InstantDB.init({ appId: APP_ID });
-            db.subscribeQuery({ _users: {} }, (result) => {
-                document.getElementById('loading-spinner').classList.add('hidden');
-                if (result.user) {
-                    document.getElementById('auth-section').classList.add('hidden');
-                    document.getElementById('main-content').classList.remove('hidden');
-                    renderLinks('physics');
-                } else {
-                    document.getElementById('auth-section').classList.remove('hidden');
-                    document.getElementById('main-content').classList.add('hidden');
-                }
-            });
+    function checkPassword() {
+        const input = document.getElementById('pass-input').value.trim();
+        if (btoa(input) === SECRET_B64) {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('main-content').classList.remove('hidden');
+            render('physics');
+        } else {
+            document.getElementById('error-msg').classList.remove('hidden');
         }
+    }
+
+    const data = {
+        physics: [
+            { ch: "Physics I", items: [
+                { t: "Vector Components", id: "XBjyCLXlQT8" },
+                { t: "Newtonian Friction", id: "je80VO20BGE" },
+                { t: "Lecture Notes (PDF)", id: "1tJxWoJYFUe7xlhK9iXVRtQGCOlkdPeCN", drive: true }
+            ]}
+        ],
+        chemistry: [
+            { ch: "Unit 01", items: [
+                { t: "Stoichiometry Basics", id: "4faQxwkfZ7M" }
+            ]}
+        ],
+        math: [
+            { ch: "Calculus", items: [
+                { t: "Limits & Functions", id: "leLz-2MQw7M" }
+            ]}
+        ]
     };
 
-    async function sendMagicLink() {
-        const email = document.getElementById('email').value;
-        if (!email) return alert("Email দিন");
-        try {
-            await db.auth.sendMagicCode({ email });
-            const code = prompt("আপনার ইমেইলে পাঠানো ৬ সংখ্যার কোডটি দিন:");
-            if (code) await db.auth.signInWithMagicCode({ email, code });
-        } catch (err) { alert("Error: " + err.message); }
-    }
-
-    function logout() { db.auth.signOut(); }
-
-    function renderLinks(subject) {
-        ['physics', 'chemistry', 'math'].forEach(s => {
-            const btn = document.getElementById(`tab-${s}`);
-            if(btn) btn.className = `flex-1 py-3 rounded-2xl text-sm bg-white shadow-sm border ${s === subject ? 'tab-active' : 'text-gray-500'}`;
-        });
-
-        const list = document.getElementById('video-list');
-        list.innerHTML = "";
+    function toggleAccordion(el) {
+        const item = el.parentElement;
+        const isActive = item.classList.contains('active');
         
-        if(!portalData[subject] || portalData[subject].length === 0) {
-            list.innerHTML = "<p class='text-center text-gray-400 mt-10'>ভিডিও শীঘ্রই আসছে...</p>";
-            return;
-        }
-
-        portalData[subject].forEach(ch => {
-            let section = `<div><h2 class="text-xs font-black text-blue-500 mb-6 uppercase tracking-widest pl-2 border-l-4 border-blue-600">${ch.chapter}</h2>`;
-            ch.videos.forEach(vid => {
-                const videoUI = vid.isDrive 
-                    ? `<div class="drive-placeholder"><p class="text-xs text-orange-600 font-bold mb-3">Google Drive File</p><a href="${vid.url}" target="_blank" class="bg-orange-500 text-white px-6 py-2 rounded-xl text-xs font-bold shadow-lg inline-block">প্লে করতে এখানে ক্লিক করুন</a></div>`
-                    : `<div class="video-container shadow-xl"><iframe src="${vid.url}" frameborder="0" allowfullscreen loading="lazy"></iframe></div>`;
-                section += `<div class="mb-10"><p class="text-[11px] font-bold text-gray-400 mb-2 uppercase px-1">${vid.title}</p>${videoUI}</div>`;
-            });
-            list.innerHTML += section + `</div>`;
-        });
-        window.scrollTo(0,0);
+        // Auto-close others
+        document.querySelectorAll('.accordion-item').forEach(i => i.classList.remove('active'));
+        
+        if (!isActive) item.classList.add('active');
     }
+
+    function render(subject) {
+        ['physics', 'chemistry', 'math'].forEach(s => {
+            document.getElementById('btn-'+s).className = `flex-1 py-3 text-[10px] font-bold border border-neutral-800 rounded-full transition-all tracking-widest uppercase ${s === subject ? 'tab-active' : 'text-neutral-500'}`;
+        });
+
+        const list = document.getElementById('content-list');
+        list.innerHTML = "";
+
+        (data[subject] || []).forEach((chapter) => {
+            let html = `<div class="pt-8 pb-4 text-[9px] font-bold text-neutral-600 uppercase tracking-[0.5em] px-2">${chapter.ch}</div>`;
+            
+            chapter.items.forEach((item) => {
+                const playerHtml = item.drive 
+                    ? `<div class="p-8 bg-neutral-900/50 rounded-xl border border-neutral-800 text-center">
+                        <p class="text-[9px] font-bold text-neutral-500 mb-6 uppercase tracking-[0.2em]">External Resource</p>
+                        <a href="https://drive.google.com/file/d/${item.id}/view" target="_blank" class="border border-neutral-700 text-neutral-300 px-8 py-3 rounded-full text-[10px] font-bold hover:bg-white hover:text-black transition-all uppercase tracking-widest">Open Drive</a>
+                       </div>`
+                    : `<div class="video-wrapper">
+                        <iframe src="https://www.youtube-nocookie.com/embed/${item.id}?autoplay=0&rel=0&modestbranding=1" allowfullscreen></iframe>
+                       </div>`;
+
+                html += `
+                    <div class="accordion-item glass-card overflow-hidden">
+                        <button onclick="toggleAccordion(this)" class="w-full flex justify-between items-center p-6 text-left">
+                            <span class="text-xs font-bold tracking-tight text-neutral-300">${item.t}</span>
+                            <svg class="chevron w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        <div class="accordion-content">
+                            ${playerHtml}
+                        </div>
+                    </div>`;
+            });
+            list.innerHTML += html;
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    document.getElementById("pass-input").addEventListener("keypress", (e) => { if (e.key === "Enter") checkPassword(); });
 </script>
 </body>
 </html>
