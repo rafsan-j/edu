@@ -1,164 +1,354 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Archive 25 | Immersive</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Archive 25</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #0a0a0a; --accent: #ededed; --border: #262626; }
-        body { background: var(--bg); color: var(--accent); overflow-x: hidden; font-family: ui-sans-serif, system-ui; }
-        
-        /* Immersive Utilities */
-        .page { display: none; min-height: 100vh; width: 100%; padding: 2rem; box-sizing: border-box; }
-        .page.active { display: flex; flex-direction: column; }
-        .full-screen-video { width: 100vw; height: 100vh; background: #000; display: flex; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; z-index: 100; }
-        
-        /* Animal Eye Tracking Styles */
-        .animal-container { display: flex; justify-content: center; gap: 20px; margin-bottom: 2rem; }
-        .animal { width: 60px; height: 60px; background: #1a1a1a; border-radius: 50%; position: relative; border: 1px solid #333; }
-        .eye-socket { position: absolute; top: 20px; width: 14px; height: 14px; background: #fff; border-radius: 50%; overflow: hidden; }
-        .eye-left { left: 12px; } .eye-right { right: 12px; }
-        .pupil { position: absolute; width: 7px; height: 7px; background: #000; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); transition: transform 0.1s linear; }
-        
-        /* Subject Cards */
-        .subject-card { height: 250px; border: 1px solid var(--border); border-radius: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.4s; background: #121212; position: relative; overflow: hidden; }
-        .subject-card:hover { border-color: #666; transform: translateY(-5px); background: #161616; }
-        .subject-card h2 { font-size: 1.5rem; letter-spacing: 0.3em; font-weight: 200; text-transform: uppercase; z-index: 2; }
-
-        /* Navigation */
-        .back-btn { position: fixed; top: 20px; left: 20px; z-index: 200; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 10px 20px; border-radius: 50px; font-size: 10px; font-weight: bold; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); }
-        
-        /* Password Input Wrapper */
-        .input-wrapper { position: relative; width: 100%; max-width: 400px; margin: 0 auto; }
-        .toggle-eye { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #555; }
+        :root { --bg: #050505; --card: #0c0c0c; --border: rgba(255, 255, 255, 0.08); }
+        body { background-color: var(--bg); color: white; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; margin: 0; }
+        .view { display: none; opacity: 0; transform: translateY(10px); transition: opacity 0.4s ease, transform 0.4s ease; width: 100%; }
+        .view.active { display: flex; opacity: 1; transform: translateY(0); }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid var(--border); }
+        .subject-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+        .subject-card:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); transform: translateY(-4px); }
+        .pupil { transition: transform 0.1s linear; }
+        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
     </style>
 </head>
-<body oncontextmenu="return false;">
+<body>
 
-    <section id="login-page" class="page active items-center justify-center">
-        <div class="animal-container">
-            <div class="animal"><div class="eye-socket eye-left"><div class="pupil"></div></div><div class="eye-socket eye-right"><div class="pupil"></div></div></div>
-            <div class="animal"><div class="eye-socket eye-left"><div class="pupil"></div></div><div class="eye-socket eye-right"><div class="pupil"></div></div></div>
-            <div class="animal"><div class="eye-socket eye-left"><div class="pupil"></div></div><div class="eye-socket eye-right"><div class="pupil"></div></div></div>
+    <nav class="fixed top-0 left-0 w-full z-50 p-6 flex justify-between items-center pointer-events-none">
+        <div id="nav-left" class="pointer-events-auto opacity-0 transition-opacity">
+            <button onclick="Router.back()" class="glass px-5 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-white hover:text-black transition-all">← Back</button>
         </div>
-
-        <div class="input-wrapper">
-            <input type="password" id="pass-input" placeholder="ACCESS KEY" 
-                class="w-full bg-transparent border-b border-neutral-800 p-4 outline-none text-center text-xl tracking-[0.4em] focus:border-neutral-400 transition-all">
-            <span class="toggle-eye" onclick="togglePassword()">
-                <svg id="eye-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-            </span>
+        <div class="pointer-events-auto">
+            <button onclick="Auth.logout()" class="glass px-5 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-red-500/20 transition-all">Lock</button>
         </div>
-        <button onclick="checkPassword()" class="mt-12 px-12 py-4 bg-white text-black rounded-full font-black text-[10px] tracking-widest uppercase hover:bg-neutral-200 transition-all">Enter</button>
-    </section>
+    </nav>
 
-    <section id="subject-page" class="page">
-        <header class="mb-12">
-            <h1 class="text-3xl font-light tracking-tighter">ARCHIVE <span class="font-bold">25</span></h1>
+    <main id="view-login" class="view active min-h-screen flex-col items-center justify-center p-6 text-center">
+        <div id="eye-container" class="flex gap-4 mb-12"></div>
+        <div class="w-full max-w-sm space-y-6">
+            <h1 class="text-xs font-black tracking-[0.8em] uppercase opacity-40">System Access</h1>
+            <input type="password" id="pass-field" class="w-full bg-transparent border-b border-white/10 py-4 text-center text-xl tracking-[0.5em] outline-none focus:border-white transition-colors" placeholder="••••••">
+            <button onclick="Auth.login()" class="w-full py-4 bg-white text-black text-[10px] font-bold uppercase tracking-[0.3em] rounded-full hover:scale-[0.98] transition-transform">Authenticate</button>
+        </div>
+    </main>
+
+    <main id="view-subjects" class="view min-h-screen flex-col items-center pt-32 p-6">
+        <header class="text-center mb-16">
+            <h2 class="text-3xl font-light tracking-tighter mb-2">Academic Archive</h2>
+            <p class="text-neutral-500 text-xs tracking-widest uppercase">Select Discipline</p>
         </header>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full flex-grow">
-            <div onclick="openSubject('physics')" class="subject-card"><h2>Physics</h2></div>
-            <div onclick="openSubject('chemistry')" class="subject-card"><h2>Chemistry</h2></div>
-            <div onclick="openSubject('math')" class="subject-card"><h2>Math</h2></div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl" id="subject-grid"></div>
+    </main>
+
+    <main id="view-lessons" class="view min-h-screen flex-col items-center pt-32 p-6">
+        <div class="w-full max-w-3xl">
+            <div id="lesson-header" class="mb-12 text-center"></div>
+            <div id="lesson-list" class="space-y-3"></div>
         </div>
-    </section>
+    </main>
 
-    <section id="lesson-page" class="page">
-        <div class="back-btn" onclick="goTo('subject-page')">BACK</div>
-        <header class="mb-12 mt-12 text-center">
-            <h1 id="subject-title" class="text-xs font-bold tracking-[0.5em] uppercase text-neutral-500">Subject</h1>
-        </header>
-        <div id="lesson-list" class="space-y-4 w-full max-w-4xl mx-auto"></div>
-    </section>
+    <div id="view-video" class="view fixed inset-0 z-[100] bg-black items-center justify-center">
+        <button onclick="Router.back()" class="fixed top-8 left-8 z-[110] glass px-6 py-3 rounded-full text-[10px] font-bold uppercase tracking-widest">Close Stream</button>
+        <div id="player-mount" class="w-full max-w-6xl px-4"></div>
+    </div>
 
-    <section id="video-page" class="page full-screen-video">
-        <div class="back-btn" onclick="closeVideo()">CLOSE PLAYER</div>
-        <div id="player-container" class="w-full h-full max-w-6xl p-4 flex items-center justify-center"></div>
-    </section>
+    <script>
+/* ---------- UTF-8 SAFE BASE64 HELPERS ---------- */
+function encode64(str) {
+    return btoa(unescape(encodeURIComponent(str)));
+}
+function decode64(str) {
+    return decodeURIComponent(escape(atob(str)));
+}
 
-<script>
-    const SECRET_B64 = "Y2xhc3MyMDI1"; // password: class2025
-    let isPrivacyMode = false;
+/* ---------- DATABASE (UNCHANGED) ---------- */
+const DATABASE = {
+    physics: [
+        { chapter: "Vector", videos: [
+            { title: "1.1: ভেক্টরের লব্ধি, উপাংশে বিভাজন, আপেক্ষিক বেগ", url: "https://www.youtube.com/embed/XBjyCLXlQT8" },
+            { title: "1.2: নদী-নৌকা, ডট ও ক্রস গুণন, ক্যালকুলাস", url: "https://drive.google.com/file/d/1tJxWoJYFUe7xlhK9iXVRtQGCOlkdPeCN/preview", isDrive: true }
+        ]},
+        { chapter: "Newtonian Mechanics", videos: [
+            { title: "2.1: নিউটনের সূত্র, ঘর্ষণ, লিফট, যুক্ত বস্তু", url: "https://www.youtube.com/embed/je80VO20BGE" },
+            { title: "2.2: বলের ঘাত, রকেটের গতি, ভরকেন্দ্র, কৌণিক গতিসূত্র", url: "https://www.youtube.com/embed/FF0BGMlsfrw" },
+            { title: "3.1: জড়তার ভ্রামক, টর্ক, কৌণিক ভরবেগ ও শক্তি", url: "https://www.youtube.com/embed/s27iWN1CcbY" },
+            { title: "3.2: কেন্দ্রমুখী ত্বরণ, ব্যাংকিং, উল্লম্ব বৃত্তাকার গতি", url: "https://www.youtube.com/embed/FEdbB8XLfWM" }
+        ]},
+        { chapter: "Work, Power, Energy", videos: [
+            { title: "4.1: কাজের রাশিমালা, Spring, ভারকেন্দ্রের সরণ", url: "https://www.youtube.com/embed/UY7fZQ2PU88" },
+            { title: "4.2: বিভব ও গতিশক্তি, কর্মদক্ষতা, চৌবাচ্চা", url: "https://www.youtube.com/embed/biYbbiFs1j4" }
+        ]},
+        { chapter: "Gravity and Gravitation", videos: [
+            { title: "5.1: নিউটনের মহাকর্ষ সূত্র, g এর পরিবর্তন", url: "https://www.youtube.com/embed/i0qlLlS6UAU" },
+            { title: "5.2: মুক্তিবেগ, কৃত্রিম উপগ্রহ, কেপলারের সূত্র", url: "https://www.youtube.com/embed/y_4UQxvel_A" }
+        ]},
+        { chapter: "Matter & Periodic Motion", videos: [
+            { title: "6.1: পদার্থের গাঠনিক ধর্ম, ইয়ং এর গুণাঙ্ক, পীড়ন-বিকৃতি", url: "https://www.youtube.com/embed/TRFbyh70Yko" },
+            { title: "6.2: পর্যাব্যবৃত্ত গতি, সরল দোলক, দোলন শক্তি", url: "https://www.youtube.com/embed/iZZoj9QIuW8" }
+        ]},
+        { chapter: "Ideal Gas & Thermodynamics", videos: [
+            { title: "7.1: বয়েল ও চার্লসের সূত্র, আদর্শ গ্যাস", url: "https://www.youtube.com/embed/MoYvV-YViUI" },
+            { title: "7.2: গ্যাসের গতিতত্ত্ব, আর্দ্রতা, থার্মোমিটার", url: "https://www.youtube.com/embed/UiwrpMVbOCA" },
+            { title: "8.1: তাপগতিবিদ্যার ১ম সূত্র, সমোষ্ণ ও রুদ্ধতাপীয়", url: "https://www.youtube.com/embed/Q5fPJ9kmA2k" },
+            { title: "8.2: তাপ ইঞ্জিন, কার্নোর ইঞ্জিন, এন্ট্রপি", url: "https://www.youtube.com/embed/mLrrO3EP82Y" }
+        ]},
+        { chapter: "Electricity", videos: [
+            { title: "9.1: স্থির তড়িৎ: কুলম্বের সূত্র, গাউসের সূত্র", url: "https://www.youtube.com/embed/8irH-f-yY2E" },
+            { title: "9.2: বিভব, ধারক ও ধারকত্ব, তড়িৎ দ্বিমেরু", url: "https://www.youtube.com/embed/XDE-pG7cv78" },
+            { title: "10.1: চল তড়িৎ: ও’মের সূত্র, রোধ, বিভব বিভাজক", url: "https://www.youtube.com/embed/ierwn_OmqV4" },
+            { title: "10.2: কার্শফের সূত্র, শান্ট, কোষের সমবায়", url: "https://www.youtube.com/embed/pfPW6o3Skxg" }
+        ]},
+        { chapter: "Modern & Nuclear Physics", videos: [
+            { title: "11.1: ভৌত আলোকবিজ্ঞান: ব্যতিচার, অপবর্তন, সমবর্তন", url: "https://www.youtube.com/embed/ZfQeo3OYjr0" },
+            { title: "11.2: লরেঞ্জ রূপান্তর, ফটো তড়িৎ ক্রিয়া, এক্স-রে", url: "https://www.youtube.com/embed/3Fasaq-dgjs" },
+            { title: "12.1: পরমাণু মডেল, তেজস্ক্রিয়তা, ফিউশন-ফিশন", url: "https://www.youtube.com/embed/wtT-sb63z2U" },
+            { title: "12.2: সেমিকন্ডাক্টর, ডায়োড, ট্রানজিস্টর", url: "https://www.youtube.com/embed/LbdXOcYWwec" }
+        ] }
+    ],
+    math: [
+        { chapter: "Straight Line", videos: [
+            { title: "1.1: স্থানাঙ্ক ব্যবস্থা ও সরলরেখার সমীকরণ", url: "https://www.youtube.com/embed/n9ucqXgveqo" },
+            { title: "1.2: সমীকরণ (সকল সমস্যা) ও প্রতিবিম্ব", url: "https://www.youtube.com/embed/A0VyLG1U_mE" }
+        ]},
+        { chapter: "Circle", videos: [
+            { title: "2.1: বৃত্তের সমীকরণ ও পোলার সমীকরণ", url: "https://www.youtube.com/embed/-cUAIwk-QnA" },
+            { title: "2.2: সঞ্চারপথ, স্পর্শক-ছেদক ও সাধারণ স্পর্শক", url: "https://www.youtube.com/embed/tOKou6HaRMU" }
+        ]},
+        { chapter: "Conics", videos: [
+            { title: "3.1: কনিক শনাক্তকরণ ও পরাবৃত্ত", url: "https://www.youtube.com/embed/D5eS79LOEVk" },
+            { title: "3.2: কনিক শনাক্ত ও পরাবৃত্ত (পার্ট ২)", url: "https://www.youtube.com/embed/mE14yHjiK7Y" },
+            { title: "4.1: অধিবৃত্ত ও সকল কনিকের স্পর্শক", url: "https://www.youtube.com/embed/JBBKyH3Y7dA" }
+        ]},
+        { chapter: "Matrix & Complex Number", videos: [
+            { title: "4.2: ম্যাট্রিক্স ও নির্ণায়ক", url: "https://www.youtube.com/embed/qxkvSrWEEqA" },
+            { title: "5.1: জটিল সংখ্যা: মডুলাস, আর্গুমেন্ট, পোলার প্রতিরূপ", url: "https://www.youtube.com/embed/9Z9_4M1o2nY" },
+            { title: "5.2: জটিল সংখ্যা: মূল, সঞ্চারপথ, উৎপাদক", url: "https://www.youtube.com/embed/I08ju-tkcp4" }
+        ]},
+        { chapter: "Polynomial & Trigonometry", videos: [
+            { title: "6.1: বহুপদী সমীকরণ ও লেখচিত্র", url: "https://www.youtube.com/embed/lrQbaOLOLmg" },
+            { title: "6.2: মূল সহগ সম্পর্ক, সাধারণ মূল", url: "https://www.youtube.com/embed/y976Gk_aDC0" },
+            { title: "7.1: সংযুক্ত কোণ, Euler & De Moivre সূত্র", url: "https://www.youtube.com/embed/RRSwAF8GbU4" },
+            { title: "7.2: যৌগিক, গুণিতক কোণ ও ত্রিভুজের গুণাবলি", url: "https://www.youtube.com/embed/ua7dtG2CQaQ" }
+        ]},
+        { chapter: "Inverse Trig & Calculus", videos: [
+            { title: "8.1: বিপরীত ত্রিকোণমিতি: লেখচিত্র ও ডোমেন রেঞ্জ", url: "https://www.youtube.com/embed/VqxSG8hqvXE" },
+            { title: "8.2: ত্রিকোণমিতিক সমীকরণ সমাধান", url: "https://www.youtube.com/embed/5JPt7dC6ccw" },
+            { title: "9.1: অন্তরীকরণ: সীমা, L'Hopital Rule", url: "https://www.youtube.com/embed/leLz-2MQw7M" },
+            { title: "9.2: Sandwich & Mean Value Theorem", url: "https://www.youtube.com/embed/7Gp8zAc8Las" },
+            { title: "11.1: পর্যায়ক্রমিক অন্তরীকরণ, লঘুমান-গুরুমান", url: "https://www.youtube.com/embed/lY5ufNC_gcc" }
+        ]},
+        { chapter: "Integration & Statics", videos: [
+            { title: "10.1: অনির্দিষ্ট যোগজীকরণ", url: "https://www.youtube.com/embed/3nen9_l--0A" },
+            { title: "10.2: অংশক্রমে সমাকলন ও নির্দিষ্ট যোগজ", url: "https://www.youtube.com/embed/FLszdGtfqQQ" },
+            { title: "11.2: যোগজীকরণের সাহায্যে ক্ষেত্রফল", url: "https://www.youtube.com/embed/mldJKQ_i6L8" },
+            { title: "12.1: স্থিতিবিদ্যা: লব্ধি ও লামির উপপাদ্য", url: "https://www.youtube.com/embed/cG8nFtMWCIw" },
+            { title: "12.2: স্থিতিবিদ্যা: ভ্রামক ও সমান্তরাল বল", url: "https://www.youtube.com/embed/FCBlXjSyEg0" }
+        ]},
+        { chapter: "Dynamics", videos: [
+            { title: "13.1: বস্তুকণার গতি: বেগের সামান্তরিক সূত্র", url: "https://www.youtube.com/embed/hPrvTST5G6E" },
+            { title: "13.2: পড়ন্ত বস্তু ও প্রাস সংক্রান্ত", url: "https://www.youtube.com/embed/TImKGgx0TRU" }
+        ]}
+    ],
+    chemistry: [
+        { chapter: "Quantitative & Qualitative", videos: [
+            { title: "1.1: মোল, ঘনমাত্রা ও সহগানুপাত সূত্র", url: "https://www.youtube.com/embed/4faQxwkfZ7M" },
+            { title: "1.2: জারণ-বিজারণ, অম্ল-ক্ষার টাইট্রেশন", url: "https://www.youtube.com/embed/IFuUwzJt2pU" },
+            { title: "3.1: পরমাণু মডেল, কোয়ান্টাম সংখ্যা, বর্ণালি", url: "https://www.youtube.com/embed/XXavQ_jK8zU" },
+            { title: "3.2: দ্রাব্যতা ও আয়ন শনাক্তকরণ", url: "https://www.youtube.com/embed/uFS7KbDiMTk" }
+        ]},
+        { chapter: "Chemical Change & Environment", videos: [
+            { title: "2.1.1: রাসায়নিক পরিবর্তন (লেকচার ১)", url: "https://www.youtube.com/embed/H5JtgOYUCJk" },
+            { title: "2.1.2: KP, KC ও সাম্যাবস্থা", url: "https://www.youtube.com/embed/GzJLSstpyyk" },
+            { title: "2.2: অম্ল-ক্ষার সাম্যাবস্থা ও এসিড ক্ষার তত্ত্ব", url: "https://www.youtube.com/embed/RY7BNfh7JVA" },
+            { title: "6.1: গ্যাস সূত্রসমূহ, আদর্শ ও বাস্তব গ্যাস", url: "https://www.youtube.com/embed/0FPQN-hYnkY" },
+            { title: "6.2: ডাল্টনের চাপ সূত্র ও পানির বিশুদ্ধতা", url: "https://www.youtube.com/embed/vvtoId5pK1g" }
+        ]},
+        { chapter: "Periodic Properties & Bonding", videos: [
+            { title: "4.1: পর্যায় সারণি ও পর্যায়বৃত্ত ধর্ম", url: "https://www.youtube.com/embed/vOAszN7evLg" },
+            { title: "4.2: d-ব্লক মৌল ও জটিল যৌগের সংকরায়ন", url: "https://www.youtube.com/embed/uDBYfoXvyMA" },
+            { title: "5.1: আয়নিক, সমযোজী বন্ধন ও হাইব্রিডাইজেশন", url: "https://www.youtube.com/embed/MzDpM4h_6qw" },
+            { title: "5.2: পোলারিটি, হাইড্রোজেন ও ভ্যান্ডার ওয়ালস বন্ধন", url: "https://www.youtube.com/embed/csMRbxOiB1Q" }
+        ]},
+        { chapter: "Electrochemistry & Industrial", videos: [
+            { title: "7.1: পরিবাহিতা ও ফ্যারাডের সূত্র", url: "https://www.youtube.com/embed/WMccmFpn6Lo" },
+            { title: "7.2: নার্নস্টের সমীকরণ ও কর্মমুখী রসায়ন", url: "https://www.youtube.com/embed/4GowBH2XFH4" }
+        ]},
+        { chapter: "Organic Chemistry", videos: [
+            { title: "8.1: জৈব যৌগের নামকরণ ও সমগোত্রীয় শ্রেণি", url: "https://www.youtube.com/embed/tRUUNDAcIG8" },
+            { title: "8.2: স্টেরিও সমাণুতা", url: "https://www.youtube.com/embed/WSJ2GpA5h_E" },
+            { title: "9.1: অ্যালকেন, অ্যালকিন, অ্যালকাইন", url: "https://www.youtube.com/embed/4QNNRv2pCw8" },
+            { title: "9.2: অ্যারোমেটিসিটি, হাকেল তত্ত্ব ও টলুইন", url: "https://www.youtube.com/embed/0k5L3CgUovU" },
+            { title: "10.1: অ্যালকাইল ও অ্যারাইল হ্যালাইড", url: "https://www.youtube.com/embed/KGGUA_Bo_og" },
+            { title: "10.2: অ্যালকোহল ও ইথার", url: "https://www.youtube.com/embed/9ceftxdLqCg" },
+            { title: "11.1: অ্যালডিহাইড ও কিটোন", url: "https://www.youtube.com/embed/N_aLnpkTahY" },
+            { title: "11.2: জৈব এসিড ও অ্যামিন", url: "https://www.youtube.com/embed/aCYLxjm2bJU" }
+        ]}
+    ]
+};
 
-    // --- Eye Tracking Logic ---
-    document.addEventListener('mousemove', (e) => {
-        if (isPrivacyMode) return;
-        const pupils = document.querySelectorAll('.pupil');
-        pupils.forEach(pupil => {
-            const rect = pupil.getBoundingClientRect();
-            const x = (e.clientX - rect.left) / 30;
-            const y = (e.clientY - rect.top) / 30;
-            pupil.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+/* ---------- AUTH ---------- */
+const Auth = {
+    HASH: "Y2xhc3MyMDI1",
+    login() {
+        if (encode64(document.getElementById('pass-field').value) === this.HASH) {
+            localStorage.setItem('auth', 'true');
+            Router.go('view-subjects');
+        } else alert('Access Denied');
+    },
+    logout() {
+        localStorage.removeItem('auth');
+        location.reload();
+    },
+    check() {
+        return localStorage.getItem('auth') === 'true';
+    }
+};
+
+/* ---------- ROUTER ---------- */
+const Router = {
+    history: [],
+    current: 'view-login',
+
+    go(id, data = null) {
+        this.history.push(this.current);
+        this.render(id, data);
+    },
+
+    back() {
+        if (this.history.length > 0) {
+            this.render(this.history.pop());
+        }
+    },
+
+    render(id, data) {
+        document.querySelectorAll('.view').forEach(v => {
+            v.classList.remove('active');
+            v.style.display = 'none';
         });
-    });
 
-    function togglePassword() {
-        const input = document.getElementById('pass-input');
-        const pupils = document.querySelectorAll('.pupil');
-        isPrivacyMode = !isPrivacyMode;
-        
-        if (isPrivacyMode) {
-            input.type = "text";
-            // Look away logic
-            pupils.forEach(p => p.style.transform = `translate(calc(-50% + 15px), calc(-50% - 15px))`);
-        } else {
-            input.type = "password";
+        const target = document.getElementById(id);
+        target.style.display = 'flex';
+        setTimeout(() => target.classList.add('active'), 10);
+        this.current = id;
+
+        document.getElementById('nav-left').style.opacity =
+            (id === 'view-login' || id === 'view-subjects') ? '0' : '1';
+
+        if (id === 'view-subjects') UI.drawSubjects();
+        if (id === 'view-lessons') UI.drawLessons(data);
+        if (id === 'view-video') UI.mountVideo(data);
+
+        if (id !== 'view-video') {
+            document.getElementById('player-mount').innerHTML = '';
         }
     }
+};
 
-    // --- Navigation Logic ---
-    function goTo(pageId) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(pageId).classList.add('active');
+/* ---------- UI ---------- */
+const UI = {
+    drawSubjects() {
+        document.getElementById('subject-grid').innerHTML =
+            Object.keys(DATABASE).map(key => `
+                <div onclick="Router.go('view-lessons','${key}')"
+                     class="subject-card glass p-12 rounded-[40px] flex flex-col items-center">
+                    <div class="w-2 h-2 rounded-full bg-white mb-6"></div>
+                    <h3 class="text-sm font-black uppercase tracking-[0.4em]">${key}</h3>
+                </div>
+            `).join('');
+    },
+
+    drawLessons(key) {
+        const subjectData = DATABASE[key];
+        document.getElementById('lesson-header').innerHTML =
+            `<h2 class="text-4xl font-light uppercase tracking-widest">${key}</h2>`;
+
+        document.getElementById('lesson-list').innerHTML =
+            subjectData.map(ch => `
+                <div class="pt-8 pb-2 text-[10px] font-bold text-neutral-500 uppercase tracking-widest border-b border-white/5 mb-4">
+                    ${ch.chapter}
+                </div>
+                ${ch.videos.map(v => {
+                    const vidKey = encode64(v.title);
+                    const isWatched = localStorage.getItem('seen-' + vidKey);
+                    const payload = encode64(JSON.stringify(v));
+
+                    return `
+                        <div onclick="Router.go('view-video','${payload}')"
+                             class="group flex items-center justify-between p-5 glass rounded-2xl cursor-pointer hover:bg-white/5 mb-3">
+                            <span class="text-sm ${isWatched ? 'opacity-30' : ''}">
+                                ${v.title}
+                            </span>
+                            <span class="text-[9px] border border-white/20 px-4 py-1.5 rounded-full
+                                 group-hover:bg-white group-hover:text-black transition-all">
+                                STREAM
+                            </span>
+                        </div>
+                    `;
+                }).join('')}
+            `).join('');
+    },
+
+    mountVideo(encoded) {
+        const data = JSON.parse(decode64(encoded));
+        localStorage.setItem('seen-' + encode64(data.title), 'true');
+
+        document.getElementById('player-mount').innerHTML = `
+            <div class="video-container rounded-3xl overflow-hidden glass shadow-2xl">
+                <iframe src="${data.url}?autoplay=1"
+                        frameborder="0"
+                        allow="autoplay; fullscreen"
+                        allowfullscreen>
+                </iframe>
+            </div>
+        `;
     }
+};
 
-    function checkPassword() {
-        if (btoa(document.getElementById('pass-input').value.trim()) === SECRET_B64) goTo('subject-page');
+/* ---------- EYES ---------- */
+const Eyes = {
+    init() {
+        const container = document.getElementById('eye-container');
+        for (let i = 0; i < 3; i++) {
+            container.innerHTML += `
+                <svg class="w-20 h-20" viewBox="0 0 100 100">
+                    <rect x="10" y="10" width="80" height="80" rx="30" fill="#111"/>
+                    <circle cx="35" cy="45" r="10" fill="white"/>
+                    <circle cx="65" cy="45" r="10" fill="white"/>
+                    <circle class="pupil" cx="35" cy="45" r="5" fill="black"/>
+                    <circle class="pupil" cx="65" cy="45" r="5" fill="black"/>
+                </svg>`;
+        }
+
+        const move = (x, y) => {
+            const dx = (x / window.innerWidth - 0.5) * 15;
+            const dy = (y / window.innerHeight - 0.5) * 15;
+            document.querySelectorAll('.pupil')
+                .forEach(p => p.style.transform = `translate(${dx}px, ${dy}px)`);
+        };
+
+        window.addEventListener('mousemove', e => move(e.clientX, e.clientY));
+        window.addEventListener('touchmove', e =>
+            move(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
     }
+};
 
-    const data = {
-        physics: [
-            { ch: "Mechanics", vids: [{ t: "Vector Components", id: "XBjyCLXlQT8" }, { t: "Friction Basics", id: "je80VO20BGE" }] },
-            { ch: "Electricity", vids: [{ t: "Static Force", id: "8irH-f-yY2E" }] }
-        ],
-        chemistry: [
-            { ch: "Organic", vids: [{ t: "Nomenclature", id: "tRUUNDAcIG8" }] }
-        ],
-        math: [
-            { ch: "Calculus", vids: [{ t: "Limits", id: "leLz-2MQw7M" }] }
-        ]
-    };
-
-    function openSubject(sub) {
-        document.getElementById('subject-title').innerText = sub;
-        const list = document.getElementById('lesson-list');
-        list.innerHTML = "";
-        
-        data[sub].forEach(chapter => {
-            let html = `<div class="pt-8 pb-4 text-[9px] font-bold text-neutral-600 uppercase tracking-[0.5em]">${chapter.ch}</div>`;
-            chapter.vids.forEach(v => {
-                html += `
-                    <div onclick="playVideo('${v.id}')" class="p-6 bg-[#121212] border border-neutral-800 rounded-2xl flex justify-between items-center cursor-pointer hover:border-neutral-500 transition-all">
-                        <span class="text-xs font-bold tracking-widest uppercase">${v.t}</span>
-                        <span class="text-[9px] font-black text-neutral-600">PLAY</span>
-                    </div>`;
-            });
-            list.innerHTML += html;
-        });
-        goTo('lesson-page');
-    }
-
-    function playVideo(id) {
-        const container = document.getElementById('player-container');
-        container.innerHTML = `<iframe class="w-full aspect-video rounded-xl shadow-2xl" src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&modestbranding=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
-        goTo('video-page');
-    }
-
-    function closeVideo() {
-        document.getElementById('player-container').innerHTML = "";
-        goTo('lesson-page');
-    }
+/* ---------- INIT ---------- */
+document.addEventListener('DOMContentLoaded', () => {
+    Eyes.init();
+    if (Auth.check()) Router.render('view-subjects');
+    document.getElementById('pass-field')
+        .addEventListener('keypress', e => e.key === 'Enter' && Auth.login());
+});
 </script>
+
 </body>
 </html>
