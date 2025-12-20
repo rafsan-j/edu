@@ -3,23 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Archive 25</title>
+    <title>Archive 25 | Professional</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #050505; --card: #0c0c0c; --border: rgba(255, 255, 255, 0.08); }
-        body { background-color: var(--bg); color: white; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; margin: 0; }
-        .view { display: none; opacity: 0; transform: translateY(10px); transition: opacity 0.4s ease, transform 0.4s ease; width: 100%; }
-        .view.active { display: flex; opacity: 1; transform: translateY(0); }
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid var(--border); }
-        .subject-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
-        .subject-card:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); transform: translateY(-4px); }
-        .pupil { transition: transform 0.1s linear; }
-        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; }
-        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
-    </style>
+    :root { --bg: #050505; --card: #0c0c0c; --border: rgba(255, 255, 255, 0.08); }
+    body { background-color: var(--bg); color: white; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-font-smoothing: antialiased; overflow-x: hidden; margin: 0; }
+    .view { display: none; opacity: 0; transform: translateY(10px); transition: opacity 0.4s ease, transform 0.4s ease; width: 100%; }
+    .view.active { display: flex; opacity: 1; transform: translateY(0); }
+    .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid var(--border); }
+    
+    /* FIXED VIDEO CONTAINER */
+    .video-container { 
+        position: relative; 
+        width: 100%;
+        aspect-ratio: 16 / 9; /* Modern replacement for padding-bottom trick */
+        overflow: hidden; 
+    }
+    .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+    
+    .subject-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+    .subject-card:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); transform: translateY(-4px); }
+    .pupil { transition: transform 0.1s linear; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+</style>
 </head>
 <body>
 
@@ -199,7 +207,7 @@ const DATABASE = {
 const Auth = {
     HASH: "Y2xhc3MyMDI1",
     login() {
-        if (encode64(document.getElementById('pass-field').value) === this.HASH) {
+        if (btoa(unescape(encodeURIComponent(document.getElementById('pass-field').value))) === this.HASH) {
             localStorage.setItem('auth', 'true');
             Router.go('view-subjects');
         } else alert('Access Denied');
@@ -208,108 +216,95 @@ const Auth = {
         localStorage.removeItem('auth');
         location.reload();
     },
-    check() {
-        return localStorage.getItem('auth') === 'true';
-    }
+    check() { return localStorage.getItem('auth') === 'true'; }
 };
 
 /* ---------- ROUTER ---------- */
 const Router = {
     history: [],
     current: 'view-login',
-
     go(id, data = null) {
         this.history.push(this.current);
         this.render(id, data);
     },
-
     back() {
+        // FIXED: Added fallback so the back button doesn't break on refresh
         if (this.history.length > 0) {
             this.render(this.history.pop());
+        } else {
+            this.render('view-subjects');
         }
     },
-
     render(id, data) {
         document.querySelectorAll('.view').forEach(v => {
             v.classList.remove('active');
             v.style.display = 'none';
         });
-
         const target = document.getElementById(id);
         target.style.display = 'flex';
         setTimeout(() => target.classList.add('active'), 10);
         this.current = id;
-
-        document.getElementById('nav-left').style.opacity =
-            (id === 'view-login' || id === 'view-subjects') ? '0' : '1';
-
+        document.getElementById('nav-left').style.opacity = (id === 'view-login' || id === 'view-subjects') ? '0' : '1';
         if (id === 'view-subjects') UI.drawSubjects();
         if (id === 'view-lessons') UI.drawLessons(data);
         if (id === 'view-video') UI.mountVideo(data);
-
-        if (id !== 'view-video') {
-            document.getElementById('player-mount').innerHTML = '';
-        }
     }
 };
 
 /* ---------- UI ---------- */
 const UI = {
     drawSubjects() {
-        document.getElementById('subject-grid').innerHTML =
-            Object.keys(DATABASE).map(key => `
-                <div onclick="Router.go('view-lessons','${key}')"
-                     class="subject-card glass p-12 rounded-[40px] flex flex-col items-center">
-                    <div class="w-2 h-2 rounded-full bg-white mb-6"></div>
-                    <h3 class="text-sm font-black uppercase tracking-[0.4em]">${key}</h3>
-                </div>
-            `).join('');
+        document.getElementById('subject-grid').innerHTML = Object.keys(DATABASE).map(key => `
+            <div onclick="Router.go('view-lessons','${key}')" class="subject-card glass p-12 rounded-[40px] flex flex-col items-center">
+                <div class="w-2 h-2 rounded-full bg-white mb-6"></div>
+                <h3 class="text-sm font-black uppercase tracking-[0.4em]">${key}</h3>
+            </div>`).join('');
     },
-
     drawLessons(key) {
         const subjectData = DATABASE[key];
-        document.getElementById('lesson-header').innerHTML =
-            `<h2 class="text-4xl font-light uppercase tracking-widest">${key}</h2>`;
-
-        document.getElementById('lesson-list').innerHTML =
-            subjectData.map(ch => `
-                <div class="pt-8 pb-2 text-[10px] font-bold text-neutral-500 uppercase tracking-widest border-b border-white/5 mb-4">
-                    ${ch.chapter}
-                </div>
-                ${ch.videos.map(v => {
-                    const vidKey = encode64(v.title);
-                    const isWatched = localStorage.getItem('seen-' + vidKey);
-                    const payload = encode64(JSON.stringify(v));
-
-                    return `
-                        <div onclick="Router.go('view-video','${payload}')"
-                             class="group flex items-center justify-between p-5 glass rounded-2xl cursor-pointer hover:bg-white/5 mb-3">
-                            <span class="text-sm ${isWatched ? 'opacity-30' : ''}">
-                                ${v.title}
-                            </span>
-                            <span class="text-[9px] border border-white/20 px-4 py-1.5 rounded-full
-                                 group-hover:bg-white group-hover:text-black transition-all">
-                                STREAM
-                            </span>
-                        </div>
-                    `;
-                }).join('')}
-            `).join('');
+        document.getElementById('lesson-header').innerHTML = `<h2 class="text-4xl font-light uppercase tracking-widest">${key}</h2>`;
+        document.getElementById('lesson-list').innerHTML = subjectData.map(ch => `
+            <div class="pt-8 pb-2 text-[10px] font-bold text-neutral-500 uppercase tracking-widest border-b border-white/5 mb-4">${ch.chapter}</div>
+            ${ch.videos.map(v => {
+                const vidKey = btoa(unescape(encodeURIComponent(v.title)));
+                const isWatched = localStorage.getItem('seen-' + vidKey);
+                const payload = btoa(unescape(encodeURIComponent(JSON.stringify(v))));
+                return `
+                    <div onclick="Router.go('view-video','${payload}')" class="group flex items-center justify-between p-5 glass rounded-2xl cursor-pointer hover:bg-white/5 mb-3">
+                        <span class="text-sm ${isWatched ? 'opacity-30' : ''}">${v.title}</span>
+                        <span class="text-[9px] border border-white/20 px-4 py-1.5 rounded-full group-hover:bg-white group-hover:text-black transition-all">STREAM</span>
+                    </div>`;
+            }).join('')}`).join('');
     },
-
     mountVideo(encoded) {
-        const data = JSON.parse(decode64(encoded));
-        localStorage.setItem('seen-' + encode64(data.title), 'true');
+        const data = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+        localStorage.setItem('seen-' + btoa(unescape(encodeURIComponent(data.title))), 'true');
+        
+        let thumbUrl = "";
+        if (data.url.includes("youtube.com")) {
+            const videoId = data.url.split('/').pop().split('?')[0];
+            thumbUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+        }
 
         document.getElementById('player-mount').innerHTML = `
+            <div class="video-container rounded-3xl overflow-hidden glass shadow-2xl flex flex-col items-center justify-center p-8 text-center relative"
+                 style="background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('${thumbUrl}'); background-size: cover; background-position: center;">
+                <div class="z-10 space-y-4">
+                    <h3 class="text-xl font-bold">${data.title}</h3>
+                    <p class="text-[10px] text-white/50 max-w-xs mx-auto">External content from YouTube. Data collection may occur upon loading.</p>
+                    <button onclick="UI.loadActualPlayer('${encoded}')" class="bg-white text-black px-8 py-3 rounded-full text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform">Load Player</button>
+                </div>
+            </div>`;
+    },
+    loadActualPlayer(encoded) {
+        const data = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+        const finalUrl = data.url.replace("youtube.com", "youtube-nocookie.com");
+        const separator = finalUrl.includes('?') ? '&' : '?';
+        
+        document.getElementById('player-mount').innerHTML = `
             <div class="video-container rounded-3xl overflow-hidden glass shadow-2xl">
-                <iframe src="${data.url}?autoplay=1"
-                        frameborder="0"
-                        allow="autoplay; fullscreen"
-                        allowfullscreen>
-                </iframe>
-            </div>
-        `;
+                <iframe src="${finalUrl}${separator}autoplay=1&rel=0&modestbranding=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            </div>`;
     }
 };
 
